@@ -1,7 +1,7 @@
 import { dbConnect } from "./db/index.js";
 import { app } from "./app.js";
 
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 
 dbConnect()
