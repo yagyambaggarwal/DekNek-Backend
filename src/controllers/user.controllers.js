@@ -14,29 +14,33 @@ const generateRefreshAndAccessToken = async function (userId) {
 };
 
 
-export const registerUser = async (req, res) => {
-    const { username, email, password } = req.body;
-
-    if ([username, email, password].some((e) => !e || e.trim() === "")) {
-        return res.status(400).json({ message: "Please fill all fields." });
+export const registerUser = async (req, res, next) => {
+    try {
+        const { username, email, password } = req.body;
+    
+        if ([username, email, password].some((e) => !e || e.trim() === "")) {
+            return res.status(400).json({ message: "Please fill all fields." });
+        }
+    
+        const existedUser = await User.findOne({
+            $or: [{ email }, { username }]
+        });
+    
+        if (existedUser) {
+            return res.status(409).json({ message: "User already exists" });
+        }
+    
+        const newUser = await User.create({ username, email, password });
+    
+        const user = await User.findById(newUser._id).select("-password -refreshToken");
+    
+        return res.status(201).json({
+            message: "User created successfully",
+            data: user
+        });
+    } catch (error) {
+        next(error)
     }
-
-    const existedUser = await User.findOne({
-        $or: [{ email }, { username }]
-    });
-
-    if (existedUser) {
-        return res.status(409).json({ message: "User already exists" });
-    }
-
-    const newUser = await User.create({ username, email, password });
-
-    const user = await User.findById(newUser._id).select("-password -refreshToken");
-
-    return res.status(201).json({
-        message: "User created successfully",
-        data: user
-    });
 };
 
 
